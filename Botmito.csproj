@@ -6,14 +6,26 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="bin\Debug\netcoreapp3.1\config.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.2.0-nightly-01091" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.2.0-nightly-01091" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="4.2.0-nightly-01091" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="blacklisted.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="keystorage.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="bin\Debug\netcoreapp3.1\" />
   </ItemGroup>
 
 </Project>

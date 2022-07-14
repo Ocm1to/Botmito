@@ -1,9 +1,11 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.Extensions;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -15,6 +17,8 @@ namespace Botmito.Commands
 {
     public class BasicCommands : BaseCommandModule
     {
+        const string WebApiHeader = "X-Api-Key";
+
         [Command("ping")]
         [Description("Responds with \"Pong\" and displays bot's reaction time.")]
         public async Task Ping(CommandContext ctx)
@@ -55,7 +59,7 @@ namespace Botmito.Commands
         public async Task CoinFlip(CommandContext ctx)
         {
             var rng = new Random();
-            string result = String.Empty;
+            var result = string.Empty;
 
             _ = rng.Next(2) == 0 ? result = "Heads" : result = "Tails";
 
@@ -71,7 +75,7 @@ namespace Botmito.Commands
         [Command("diceroll")]
         [Description("Perform a virtual dice roll. Specify type and number of dice.")]
         public async Task DiceRoll(CommandContext ctx,
-           [Description("Specify dice type, eg. 8-sided dice.")] int diceType,
+           [Description("Specify dice type (number of sides).")] int diceType,
            [Description("Specify number of dice you'd like to roll.")] int numberOfDice)
         {
             if(diceType > 100 || diceType <= 0)
@@ -86,17 +90,17 @@ namespace Botmito.Commands
             {
                 var rng = new Random();
                 var outcomes = new List<int>();
-                string result = String.Empty;
+                var result = string.Empty;
                 var sum = 0;
 
-                for (int i = 0; i < numberOfDice; i++)
+                for (var i = 0; i < numberOfDice; i++)
                 {
-                    int roll = rng.Next(1, diceType + 1);
+                    var roll = rng.Next(1, diceType + 1);
                     outcomes.Add(roll);
                     sum += roll;
                 }
 
-                result = String.Join(" ", outcomes);
+                result = string.Join(" ", outcomes);
 
                 await ctx.Channel.SendMessageAsync("Roll result: " + result + "\nSum: " + sum).ConfigureAwait(false);
             }  
@@ -108,7 +112,7 @@ namespace Botmito.Commands
            [Description("Specify a time for the reminder (eg. \"1d 1h 1s\").")] TimeSpan reminderTime,
            [Description("Write a note for the reminder (eg. \"turn off the oven\").")] params string[] reminderNote)
         {
-            var note = String.Join(' ', reminderNote);
+            var note = string.Join(' ', reminderNote);
             await ctx.Message.RespondAsync("Reminder set for " + (DateTime.Now + reminderTime));
           
             var reminderEmbed = new DiscordEmbedBuilder
@@ -127,9 +131,12 @@ namespace Botmito.Commands
         public async Task Fact(CommandContext ctx)
         {
             var httpClient = new HttpClient();
-            string apiUrl = "https://api.api-ninjas.com/v1/facts?limit=1";
+            var apiUrl = "https://api.api-ninjas.com/v1/facts?limit=1";
+
+            var apiKey = await GetApiKey ("keystorage.txt");
+
             httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", "SiEwIoEp7QiisqPvGaE+cw==fnLkpCOkx8kU5noA"); //my API key for this website
+            httpClient.DefaultRequestHeaders.Add(WebApiHeader, apiKey); 
 
             var fact = await httpClient.GetStringAsync(apiUrl);
 
@@ -149,9 +156,12 @@ namespace Botmito.Commands
         public async Task Joke(CommandContext ctx)
         {
             var httpClient = new HttpClient();
-            string apiUrl = "https://api.api-ninjas.com/v1/jokes?limit=1";
+            var apiUrl = "https://api.api-ninjas.com/v1/jokes?limit=1";
+
+            var apiKey = await GetApiKey("keystorage.txt");
+
             httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders.Add("X-Api-Key", "SiEwIoEp7QiisqPvGaE+cw==fnLkpCOkx8kU5noA"); //my API key for this website
+            httpClient.DefaultRequestHeaders.Add(WebApiHeader, apiKey); 
 
             var joke = await httpClient.GetStringAsync(apiUrl);
 
@@ -164,7 +174,13 @@ namespace Botmito.Commands
             };
 
             await ctx.Channel.SendMessageAsync(embed: jokeEmbed).ConfigureAwait(false);
-        }        
+        }
+        
+        private async Task<string> GetApiKey(string path)
+        {
+            var apiKey = await File.ReadAllTextAsync(path);
+            return apiKey;
+        }
     }
 }
 

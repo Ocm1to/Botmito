@@ -13,13 +13,25 @@ namespace Botmito.Commands
 {
     public class TeamCommands : BaseCommandModule
     {
+        const string BlueButtonId = "blue_button";
+        const string RedButtonId = "red_button";
+        const string GreenButtonId = "green_button";
+        const string NoneButtonId = "none_button";
+        const ulong BlueTeamId = 994600135982055464;
+        const ulong RedTeamId = 994600244757147659;
+        const ulong GreenTeamId = 990648266997776464;
+
         [Command("join")]
         public async Task Join(CommandContext ctx)
         {
-            var blueButton = new DiscordButtonComponent(ButtonStyle.Primary, "blue_button", "BlueTeam", false);
-            var redButton = new DiscordButtonComponent(ButtonStyle.Danger, "red_button", "RedTeam", false);
-            var greenButton = new DiscordButtonComponent(ButtonStyle.Success, "green_button", "GreenTeam", false);
-            var noneButton = new DiscordButtonComponent(ButtonStyle.Secondary, "none_button", "None", false);
+            var blueButton = new DiscordButtonComponent(ButtonStyle.Primary, BlueButtonId, "BlueTeam", false);
+            var redButton = new DiscordButtonComponent(ButtonStyle.Danger, RedButtonId, "RedTeam", false);
+            var greenButton = new DiscordButtonComponent(ButtonStyle.Success, GreenButtonId, "GreenTeam", false);
+            var noneButton = new DiscordButtonComponent(ButtonStyle.Secondary, NoneButtonId, "None", false);
+
+            var blueTeamRole = ctx.Guild.GetRole(BlueTeamId);
+            var redTeamRole = ctx.Guild.GetRole(RedTeamId);
+            var greenTeamRole = ctx.Guild.GetRole(GreenTeamId);
 
             var buttonEmbed = new DiscordEmbedBuilder
             {
@@ -36,31 +48,27 @@ namespace Botmito.Commands
 
             var buttonResult = await interactivity.WaitForButtonAsync(sentMessage,
                 x => x.User == ctx.User &&
-                (x.Id == "blue_button" || x.Id == "red_button" || x.Id == "green_button" || x.Id == "none_button")).ConfigureAwait(false);
+                (x.Id == BlueButtonId || x.Id == RedButtonId || x.Id == GreenButtonId || x.Id == NoneButtonId)).ConfigureAwait(false);
 
             switch (buttonResult.Result.Id)
             {
-                case "blue_button":
+                case BlueButtonId:
                     await buttonResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate).ConfigureAwait(false);
-                    await sentMessage.DeleteAsync().ConfigureAwait(false);
                     await ctx.Channel.SendMessageAsync(buttonResult.Result.User.Mention + " joined BlueTeam!").ConfigureAwait(false);
                     break;
 
-                case "red_button":
+                case RedButtonId:
                     await buttonResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate).ConfigureAwait(false);
-                    await sentMessage.DeleteAsync().ConfigureAwait(false);
                     await ctx.Channel.SendMessageAsync(buttonResult.Result.User.Mention + " joined RedTeam!").ConfigureAwait(false);
                     break;
 
-                case "green_button":
+                case GreenButtonId:
                     await buttonResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate).ConfigureAwait(false);
-                    await sentMessage.DeleteAsync().ConfigureAwait(false);
                     await ctx.Channel.SendMessageAsync(buttonResult.Result.User.Mention + " joined GreenTeam!").ConfigureAwait(false);
                     break;
 
-                case "none_button":
+                case NoneButtonId:
                     await buttonResult.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate).ConfigureAwait(false);
-                    await sentMessage.DeleteAsync().ConfigureAwait(false);
                     break;
 
                 default:
@@ -71,8 +79,8 @@ namespace Botmito.Commands
         }
 
 
-        [Command("poll")] //triggers preemptive rate limit because of adding reactions too fast
-        public async Task Poll(CommandContext ctx, TimeSpan duration, params DiscordEmoji[] emojiOptions) //Rate limit error when sending emojis
+        [Command("poll")] //discord api triggers preemptive rate limit because of adding reactions too fast
+        public async Task Poll(CommandContext ctx, TimeSpan duration, params DiscordEmoji[] emojiOptions) 
         {
             var interactivity = ctx.Client.GetInteractivity();
             var options = emojiOptions.Select(x => x.ToString());
@@ -80,7 +88,7 @@ namespace Botmito.Commands
             var embed = new DiscordEmbedBuilder
             {
                 Title = "Poll",
-                Description = String.Join(" ", options)
+                Description = string.Join(" ", options)
             };
 
             var pollMessage = await ctx.Channel.SendMessageAsync(embed: embed).ConfigureAwait(false);
@@ -95,7 +103,7 @@ namespace Botmito.Commands
 
             var results = distinctResult.Select(x => $"{x.Emoji}: {x.Total}");
 
-            await ctx.Channel.SendMessageAsync(String.Join("\n", results)).ConfigureAwait(false);
+            await ctx.Channel.SendMessageAsync(string.Join("\n", results)).ConfigureAwait(false);
         }      
 
     }

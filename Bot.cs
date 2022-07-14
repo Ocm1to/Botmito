@@ -12,6 +12,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Botmito
 {
@@ -35,18 +36,13 @@ namespace Botmito
 
             Client = new DiscordClient(clientConfig);
 
-            var services = new ServiceCollection()
-                .AddSingleton<List<string>>()
-                .BuildServiceProvider();
-
             var commandsConfig = new CommandsNextConfiguration
             {
                 StringPrefixes = new string[] { configJson.Prefix },
                 EnableDms = false,
                 EnableMentionPrefix = true,
                 DmHelp = false,
-                EnableDefaultHelp = true,
-                Services = services
+                EnableDefaultHelp = true
             };
 
             Commands = Client.UseCommandsNext(commandsConfig);
@@ -55,6 +51,8 @@ namespace Botmito
             Commands.RegisterCommands<TeamCommands>();
             Commands.RegisterCommands<ModCommands>();
 
+            Client.MessageCreated += OnMessageAdded;
+
             Client.UseInteractivity(new InteractivityConfiguration
             {
                 Timeout = TimeSpan.FromMinutes(1),
@@ -62,6 +60,16 @@ namespace Botmito
 
             await Client.ConnectAsync();
             await Task.Delay(-1);
+        }
+
+        public async Task OnMessageAdded(DiscordClient client, MessageCreateEventArgs e)
+        {
+            var blacklistedWords = File.ReadAllLines("blacklisted.txt");
+
+            if (blacklistedWords.Any(x => e.Message.Content.Contains(x)))
+            {              
+                await e.Message.RespondAsync("Watch your language!").ConfigureAwait(false);
+            }
         }
     }
 }
